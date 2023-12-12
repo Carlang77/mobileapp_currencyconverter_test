@@ -24,21 +24,21 @@ class ExchangeScreen extends StatefulWidget {
 class _ExchangeScreenState extends State<ExchangeScreen> {
   final TextEditingController _amountController = TextEditingController();
   double _convertedAmount = 0.0;
-  String _fromCurrency = 'USD';
-  String _toCurrency = 'EUR';
   double _exchangeRate = 0.85; // Initial exchange rate
   final CurrencyApiService _apiService = CurrencyApiService();
+  bool _isConvertingFromUSD = true; // New state variable
 
   @override
   void initState() {
     super.initState();
-    _refreshExchangeRate(); // Fetch the latest exchange rate when the widget is first created
+    _refreshExchangeRate();
   }
 
   void _refreshExchangeRate() async {
     try {
-      final rate =
-          await _apiService.getExchangeRate(_fromCurrency, _toCurrency);
+      final fromCurrency = _isConvertingFromUSD ? 'USD' : 'EUR';
+      final toCurrency = _isConvertingFromUSD ? 'EUR' : 'USD';
+      final rate = await _apiService.getExchangeRate(fromCurrency, toCurrency);
       setState(() {
         _exchangeRate = rate;
       });
@@ -49,17 +49,18 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
 
   void _convertCurrency() {
     setState(() {
-      _convertedAmount =
-          (double.tryParse(_amountController.text) ?? 0) * _exchangeRate;
+      final amount = double.tryParse(_amountController.text) ?? 0;
+      double rawConvertedAmount = _isConvertingFromUSD
+          ? amount * _exchangeRate
+          : amount / _exchangeRate;
+      _convertedAmount = double.parse(rawConvertedAmount.toStringAsFixed(2));
     });
   }
 
-  void _swapCurrencies() {
+  void _toggleCurrency() {
     setState(() {
-      final temp = _fromCurrency;
-      _fromCurrency = _toCurrency;
-      _toCurrency = temp;
-      _refreshExchangeRate(); // Refresh exchange rate for new currency pair
+      _isConvertingFromUSD = !_isConvertingFromUSD;
+      _refreshExchangeRate();
     });
   }
 
@@ -81,14 +82,16 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Enter Amount in $_fromCurrency',
+              'Currency',
               style: TextStyle(fontSize: 24, color: Colors.white),
             ),
             SizedBox(height: 20),
             TextField(
               controller: _amountController,
               decoration: InputDecoration(
-                hintText: 'Enter amount',
+                hintText: _isConvertingFromUSD
+                    ? 'Enter amount in USD'
+                    : 'Enter amount in EUR',
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
@@ -101,7 +104,7 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
             ),
             SizedBox(height: 20),
             GestureDetector(
-              onTap: _swapCurrencies,
+              onTap: _convertCurrency,
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -109,19 +112,26 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
                 ),
                 padding: EdgeInsets.all(10),
                 child: Icon(
-                  Icons.swap_horiz,
+                  Icons.swap_vert,
                   color: Color.fromARGB(255, 2, 75, 245),
                 ),
               ),
             ),
             SizedBox(height: 20),
             Text(
-              'Converted Amount in $_toCurrency',
+              'Converted Amount',
               style: TextStyle(fontSize: 24, color: Colors.white),
             ),
             Text(
-              (_fromCurrency == 'EUR' ? '€ ' : '\$ ') + '$_convertedAmount',
+              '${_isConvertingFromUSD ? '€' : '\$'} ${_convertedAmount.toStringAsFixed(2)}',
               style: TextStyle(fontSize: 40, color: Colors.white),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _toggleCurrency,
+              child: Text(_isConvertingFromUSD
+                  ? 'Switch to EUR to USD'
+                  : 'Switch to USD to EUR'),
             ),
           ],
         ),
