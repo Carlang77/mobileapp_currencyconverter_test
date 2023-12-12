@@ -7,7 +7,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Mobile App Quiz | Currency Exchange',
+      title: 'Currency EXchange',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -24,9 +24,12 @@ class ExchangeScreen extends StatefulWidget {
 class _ExchangeScreenState extends State<ExchangeScreen> {
   final TextEditingController _amountController = TextEditingController();
   double _convertedAmount = 0.0;
-  double _exchangeRate = 0.85; // Initial exchange rate
+  double _exchangeRate = 0.0;
   final CurrencyApiService _apiService = CurrencyApiService();
-  bool _isConvertingFromUSD = true; // New state variable
+
+  String _fromCurrency = 'EUR';
+  String _toCurrency = 'USD';
+  List<String> currencies = ['EUR', 'USD', 'GBP', 'CAD'];
 
   @override
   void initState() {
@@ -36,9 +39,8 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
 
   void _refreshExchangeRate() async {
     try {
-      final fromCurrency = _isConvertingFromUSD ? 'USD' : 'EUR';
-      final toCurrency = _isConvertingFromUSD ? 'EUR' : 'USD';
-      final rate = await _apiService.getExchangeRate(fromCurrency, toCurrency);
+      final rate =
+          await _apiService.getExchangeRate(_fromCurrency, _toCurrency);
       setState(() {
         _exchangeRate = rate;
       });
@@ -50,17 +52,7 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
   void _convertCurrency() {
     setState(() {
       final amount = double.tryParse(_amountController.text) ?? 0;
-      double rawConvertedAmount = _isConvertingFromUSD
-          ? amount * _exchangeRate
-          : amount / _exchangeRate;
-      _convertedAmount = double.parse(rawConvertedAmount.toStringAsFixed(2));
-    });
-  }
-
-  void _toggleCurrency() {
-    setState(() {
-      _isConvertingFromUSD = !_isConvertingFromUSD;
-      _refreshExchangeRate();
+      _convertedAmount = amount * _exchangeRate;
     });
   }
 
@@ -68,7 +60,7 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Currency EXCHANGE'),
+        title: Text('Currency Exchange'),
         actions: [
           IconButton(
             icon: Icon(Icons.refresh),
@@ -81,8 +73,8 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color.fromARGB(255, 76, 107, 151), // Top half is white
-              const Color.fromARGB(255, 42, 43, 43), // Bottom half is blue
+              Colors.blue[700]!,
+              Colors.blue[300]!,
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -91,28 +83,47 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              '',
-              style: TextStyle(fontSize: 24, color: Colors.white),
+            DropdownButton<String>(
+              value: _fromCurrency,
+              icon: Icon(Icons.arrow_downward, color: Colors.white),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _fromCurrency = newValue!;
+                  _refreshExchangeRate();
+                });
+              },
+              items: currencies.map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
             ),
-            SizedBox(height: 20),
+            DropdownButton<String>(
+              value: _toCurrency,
+              icon: Icon(Icons.arrow_downward, color: Colors.white),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _toCurrency = newValue!;
+                  _refreshExchangeRate();
+                });
+              },
+              items: currencies.map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+            ),
             TextField(
               controller: _amountController,
               decoration: InputDecoration(
-                hintText: _isConvertingFromUSD ? 'Enter USD' : 'Enter EUR',
+                hintText: 'Enter $_fromCurrency',
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,
-                ),
-                prefix: Text(
-                  _isConvertingFromUSD ? '\$ ' : '€ ',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 40,
-                    color: Color.fromARGB(255, 89, 89, 91),
-                  ),
                 ),
               ),
               keyboardType: TextInputType.number,
@@ -120,22 +131,19 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 40,
-                color: Color.fromARGB(255, 89, 89, 91),
+                color: Colors.black,
               ),
             ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _convertCurrency,
               style: ElevatedButton.styleFrom(
-                primary: Colors.white, // Button background color is white
-                elevation: 5, // Add shadow to the button
+                primary: Colors.white,
+                elevation: 5,
               ),
               child: Text(
                 'Convert',
-                style: TextStyle(
-                  color: Colors.black, // Text color is black
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(color: Colors.blue),
               ),
             ),
             SizedBox(height: 20),
@@ -144,19 +152,8 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
               style: TextStyle(fontSize: 24, color: Colors.white),
             ),
             Text(
-              '${_isConvertingFromUSD ? '€' : '\$'} ${_convertedAmount.toStringAsFixed(2)}',
+              '$_toCurrency ${_convertedAmount.toStringAsFixed(2)}',
               style: TextStyle(fontSize: 40, color: Colors.white),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _toggleCurrency,
-              style: ElevatedButton.styleFrom(
-                primary: Colors.white, // Button background color is white
-                elevation: 5, // Add shadow to the button
-              ),
-              child: Text(_isConvertingFromUSD
-                  ? 'Switch to EUR to USD'
-                  : 'Switch to USD to EUR'),
             ),
           ],
         ),
