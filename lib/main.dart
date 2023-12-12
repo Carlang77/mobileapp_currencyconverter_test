@@ -24,6 +24,8 @@ class ExchangeScreen extends StatefulWidget {
 class _ExchangeScreenState extends State<ExchangeScreen> {
   final TextEditingController _amountController = TextEditingController();
   double _convertedAmount = 0.0;
+  String _fromCurrency = 'USD';
+  String _toCurrency = 'EUR';
   double _exchangeRate = 0.85; // Initial exchange rate
   final CurrencyApiService _apiService = CurrencyApiService();
 
@@ -35,13 +37,12 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
 
   void _refreshExchangeRate() async {
     try {
-      // Fetch the latest exchange rate
-      final rate = await _apiService.getExchangeRate('USD', 'EUR');
+      final rate =
+          await _apiService.getExchangeRate(_fromCurrency, _toCurrency);
       setState(() {
         _exchangeRate = rate;
       });
     } catch (error) {
-      // Handle the error, perhaps by showing a dialog or a snackbar
       print('Error fetching exchange rate: $error');
     }
   }
@@ -53,6 +54,15 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
     });
   }
 
+  void _swapCurrencies() {
+    setState(() {
+      final temp = _fromCurrency;
+      _fromCurrency = _toCurrency;
+      _toCurrency = temp;
+      _refreshExchangeRate(); // Refresh exchange rate for new currency pair
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -61,8 +71,7 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.refresh),
-            onPressed:
-                _refreshExchangeRate, // Refresh the exchange rate when the button is pressed
+            onPressed: _refreshExchangeRate,
           ),
         ],
       ),
@@ -72,14 +81,14 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Currency',
+              'Enter Amount in $_fromCurrency',
               style: TextStyle(fontSize: 24, color: Colors.white),
             ),
             SizedBox(height: 20),
             TextField(
               controller: _amountController,
               decoration: InputDecoration(
-                hintText: 'Enter amount in USD',
+                hintText: 'Enter amount',
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
@@ -92,7 +101,7 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
             ),
             SizedBox(height: 20),
             GestureDetector(
-              onTap: _convertCurrency,
+              onTap: _swapCurrencies,
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -100,18 +109,18 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
                 ),
                 padding: EdgeInsets.all(10),
                 child: Icon(
-                  Icons.swap_vert,
+                  Icons.swap_horiz,
                   color: Color.fromARGB(255, 2, 75, 245),
                 ),
               ),
             ),
             SizedBox(height: 20),
             Text(
-              'Converted Amount',
+              'Converted Amount in $_toCurrency',
               style: TextStyle(fontSize: 24, color: Colors.white),
             ),
             Text(
-              '€ $_convertedAmount',
+              (_fromCurrency == 'EUR' ? '€ ' : '\$ ') + '$_convertedAmount',
               style: TextStyle(fontSize: 40, color: Colors.white),
             ),
           ],
