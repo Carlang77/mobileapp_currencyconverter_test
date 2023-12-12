@@ -101,6 +101,10 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
               ),
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold, // Make the text bold
+                fontSize: 40, // Match the font size of the converted amount
+              ),
             ),
             SizedBox(height: 20),
             GestureDetector(
