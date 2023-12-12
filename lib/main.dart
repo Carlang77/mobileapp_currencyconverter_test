@@ -68,7 +68,7 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Currency Converter'),
+        title: Text('Currency EXCHANGE'),
         actions: [
           IconButton(
             icon: Icon(Icons.refresh),
@@ -78,46 +78,63 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
       ),
       body: Container(
         padding: EdgeInsets.all(20.0),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color.fromARGB(255, 76, 107, 151), // Top half is white
+              const Color.fromARGB(255, 42, 43, 43), // Bottom half is blue
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Currency',
+              '',
               style: TextStyle(fontSize: 24, color: Colors.white),
             ),
             SizedBox(height: 20),
             TextField(
               controller: _amountController,
               decoration: InputDecoration(
-                hintText: _isConvertingFromUSD
-                    ? 'Enter amount in USD'
-                    : 'Enter amount in EUR',
+                hintText: _isConvertingFromUSD ? 'Enter USD' : 'Enter EUR',
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,
                 ),
+                prefix: Text(
+                  _isConvertingFromUSD ? '\$ ' : '€ ',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 40,
+                    color: Color.fromARGB(255, 89, 89, 91),
+                  ),
+                ),
               ),
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontWeight: FontWeight.bold, // Make the text bold
-                fontSize: 40, // Match the font size of the converted amount
+                fontWeight: FontWeight.bold,
+                fontSize: 40,
+                color: Color.fromARGB(255, 89, 89, 91),
               ),
             ),
             SizedBox(height: 20),
-            GestureDetector(
-              onTap: _convertCurrency,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                padding: EdgeInsets.all(10),
-                child: Icon(
-                  Icons.swap_vert,
-                  color: Color.fromARGB(255, 2, 75, 245),
+            ElevatedButton(
+              onPressed: _convertCurrency,
+              style: ElevatedButton.styleFrom(
+                primary: Colors.white, // Button background color is white
+                elevation: 5, // Add shadow to the button
+              ),
+              child: Text(
+                'Convert',
+                style: TextStyle(
+                  color: Colors.black, // Text color is black
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -133,21 +150,15 @@ class _ExchangeScreenState extends State<ExchangeScreen> {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _toggleCurrency,
+              style: ElevatedButton.styleFrom(
+                primary: Colors.white, // Button background color is white
+                elevation: 5, // Add shadow to the button
+              ),
               child: Text(_isConvertingFromUSD
                   ? 'Switch to EUR to USD'
                   : 'Switch to USD to EUR'),
             ),
           ],
-        ),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color.fromARGB(255, 1, 9, 248),
-              const Color.fromARGB(255, 82, 94, 255)
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
         ),
       ),
     );
